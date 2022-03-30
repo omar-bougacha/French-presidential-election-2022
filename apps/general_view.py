@@ -5,6 +5,7 @@ from app import app
 import pandas as pd
 import functions as fc
 
+dataframe = pd.DataFrame()
 
 CANDIDAT_OPTIONS = [
     {'label':'All', 'value':'All'},
@@ -31,10 +32,12 @@ KPI_OPTIONS = [
 
 layout = dbc.Container([
     dbc.Row([
-        html.H1('Élection Présidentielle 2022', className='text-center bg-info text-white')
+        html.H1(id='title_page', children='Élection Présidentielle 2022',
+                className='text-center bg-info text-white')
     ]),
-
-
+    dbc.Row([
+        dcc.Location(id='url1', refresh=False)
+    ]),
     dbc.Row([
         dbc.Col([
             html.P('Select Candidate:', className='text-center')
@@ -84,10 +87,10 @@ layout = dbc.Container([
     [Input(component_id='bp-1', component_property='n_clicks')],
     [State(component_id='DD-Candidat', component_property='value'),
      State(component_id='kpi-1', component_property='value')],
-    prevent_initial_call=False
+    prevent_initial_call=True
 )
 def update_lineplot(n, candidate, kpi):
-    df2 = fc.is_candidate_summary(fc.dataframe, candidate, on=kpi)
+    df2 = fc.is_candidate_summary(dataframe, candidate, on=kpi)
     if kpi=='number':
         ax = 'Number of Tweets'
         col = 'tweet_id'
@@ -110,10 +113,10 @@ def update_lineplot(n, candidate, kpi):
     Output(component_id='hist-plot', component_property='figure'),
     [Input(component_id='bp-2', component_property='n_clicks')],
     [State(component_id='DD-Candidat2', component_property='value')],
-    prevent_initial_call=False
+    prevent_initial_call=True
 )
 def update_histplot(n, candidate):
-    df2 = fc.account_candidate_hist(fc.dataframe, candidate)
+    df2 = fc.account_candidate_hist(dataframe, candidate)
     if candidate == 'All':
         OPACITY = 0.65
     else:
@@ -127,3 +130,14 @@ def update_histplot(n, candidate):
                                  xaxis={'title':'Age of Accounts in Days'},
                                  yaxis={'title':'Number of Accounts'})
     return figure
+
+@app.callback(
+    Output(component_id='title_page', component_property='children'),
+    [Input(component_id='url1', component_property='pathname')],
+    prevent_initial_call=False
+)
+def read_data(p_name):
+    global dataframe
+    dataframe = pd.read_csv('datasets/tweets_prez.csv', encoding='utf-8-sig')
+    dataframe = fc.data_processing(dataframe)
+    return 'Élection Présidentielle 2022'

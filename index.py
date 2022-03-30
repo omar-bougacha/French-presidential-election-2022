@@ -13,6 +13,7 @@ from apps import general_view, second_view, home
 
 
 
+
 app.layout = dbc.Container([
     dbc.Row([
         dbc.Col([dcc.Link('Home', href='/apps/Home')], width=1, className='bg-light'),
@@ -36,10 +37,10 @@ app.layout = dbc.Container([
               [Input(component_id='refresh-button', component_property='n_clicks')],
               prevent_initial_call=True)
 def update_dataframe(n):
-    info_str = fc.update_data(fc.dataframe['day'].max(),
-                              fc.dataframe[fc.dataframe['day']==fc.dataframe['day'].max()]['tweet_id'])
-    fc.dataframe = pd.read_csv('datasets/tweets_prez.csv', encoding='utf-8-sig')
-    fc.dataframe = fc.data_processing(fc.dataframe)
+    dataframe = pd.read_csv('datasets/tweets_prez.csv', encoding='utf-8-sig')
+    dataframe = fc.data_processing(dataframe)
+    info_str = fc.update_data(dataframe['day'].max(),
+                              dataframe[dataframe['day']==dataframe['day'].max()]['tweet_id'])
     return info_str
 
 

@@ -5,6 +5,7 @@ from app import app
 import pandas as pd
 import functions as fc
 
+dataframe = pd.DataFrame()
 
 CANDIDAT_OPTIONS = [
     {'label':'All', 'value':'All'},
@@ -34,9 +35,13 @@ TOP_OPTIONS = [
 
 layout = dbc.Container([
     dbc.Row([
-        html.H1('Élection Présidentielle 2022', className='text-center bg-info text-white')
+        html.H1(id='title_page2',
+                children='Élection Présidentielle 2022',
+                className='text-center bg-info text-white')
     ]),
-
+    dbc.Row([
+        dcc.Location(id='url2', refresh=False)
+    ]),
     dbc.Row([
         dbc.Col([
             html.P('Select Candidate:', className='text-center')
@@ -95,13 +100,13 @@ layout = dbc.Container([
     [Input(component_id='bp-1', component_property='n_clicks')],
     [State(component_id='DD-Candidat', component_property='value'),
      State(component_id='top-1', component_property='value')],
-    prevent_initial_call=False
+    prevent_initial_call=True
 )
 def update_htagplot(n, candidate, kpi):
     if candidate == 'All':
-        df = fc.count_htags(fc.dataframe)
+        df = fc.count_htags(dataframe)
     else:
-        df = fc.candiate_filter(fc.dataframe, candidate)
+        df = fc.candiate_filter(dataframe, candidate)
         df = fc.count_htags(df)
 
     figure={}
@@ -114,15 +119,26 @@ def update_htagplot(n, candidate, kpi):
     [Input(component_id='bp-2', component_property='n_clicks')],
     [State(component_id='DD-Candidat2', component_property='value'),
      State(component_id='top-2', component_property='value')],
-    prevent_initial_call=False
+    prevent_initial_call=True
 )
 def update_tagplot(n, candidate, kpi):
     if candidate == 'All':
-        df = fc.count_tags(fc.dataframe)
+        df = fc.count_tags(dataframe)
     else:
-        df = fc.candiate_filter(fc.dataframe, candidate)
+        df = fc.candiate_filter(dataframe, candidate)
         df = fc.count_tags(df)
     figure={}
     figure['data'] = [go.Bar(x=df.head(kpi)['tag'], y=df.head(kpi)['counts'])]
     figure['layout'] = go.Layout(xaxis={'title':'Accounts Taged'}, yaxis={'title':'Counts'})
     return figure
+
+@app.callback(
+    Output(component_id='title_page2', component_property='children'),
+    [Input(component_id='url2', component_property='pathname')],
+    prevent_initial_call=False
+)
+def read_data(p_name):
+    global dataframe
+    dataframe = pd.read_csv('datasets/tweets_prez.csv', encoding='utf-8-sig')
+    dataframe = fc.data_processing(dataframe)
+    return 'Élection Présidentielle 2022'
